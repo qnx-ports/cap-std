@@ -31,6 +31,7 @@ pub(in super::super) fn compute_oflags(options: &OpenOptions) -> io::Result<OFla
         target_os = "watchos",
         target_os = "visionos",
         target_os = "freebsd",
+        target_os = "qnx",
         target_os = "fuchsia"
     )))]
     if options.rsync {

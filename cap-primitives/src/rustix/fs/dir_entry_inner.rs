@@ -40,7 +40,7 @@ impl DirEntryInner {
         self.read_dir.remove_dir(self.file_name_bytes())
     }
 
-    #[cfg(not(any(target_os = "illumos", target_os = "solaris")))]
+    #[cfg(not(any(target_os = "illumos", target_os = "solaris", target_os = "qnx")))]
     #[inline]
     #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn file_type(&self) -> io::Result<FileType> {
@@ -60,7 +60,7 @@ impl DirEntryInner {
         })
     }
 
-    #[cfg(any(target_os = "illumos", target_os = "solaris"))]
+    #[cfg(any(target_os = "illumos", target_os = "solaris", target_os = "qnx"))]
     #[inline]
     pub(crate) fn file_type(&self) -> io::Result<FileType> {
         // These platforms don't have the file type on the dirent, so we must lstat the file.

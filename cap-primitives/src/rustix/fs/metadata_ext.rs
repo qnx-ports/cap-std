@@ -7,6 +7,9 @@ use rustix::fs::{makedev, Statx, StatxFlags};
 use rustix::fs::{RawMode, Stat};
 use std::{fs, io};
 
+#[cfg(target_os = "qnx")]
+use rustix::fs::{makedev};
+
 #[derive(Debug, Clone)]
 pub(crate) struct ImplMetadataExt {
     dev: u64,
@@ -100,20 +103,20 @@ impl ImplMetadataExt {
             #[cfg(target_os = "wasi")]
             permissions: ImplPermissionsExt::default(),
 
-            #[cfg(not(target_os = "wasi"))]
+            #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
             modified: system_time_from_rustix(
                 stat.st_mtime.try_into().unwrap(),
                 stat.st_mtime_nsec as _,
             ),
-            #[cfg(not(target_os = "wasi"))]
+            #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
             accessed: system_time_from_rustix(
                 stat.st_atime.try_into().unwrap(),
                 stat.st_atime_nsec as _,
             ),
 
-            #[cfg(target_os = "wasi")]
+            #[cfg(any(target_os = "wasi", target_os = "qnx"))]
             modified: system_time_from_rustix(stat.st_mtim.tv_sec, stat.st_mtim.tv_nsec as _),
-            #[cfg(target_os = "wasi")]
+            #[cfg(any(target_os = "wasi", target_os = "qnx"))]
             accessed: system_time_from_rustix(stat.st_atim.tv_sec, stat.st_atim.tv_nsec as _),
 
             #[cfg(any(
@@ -163,26 +166,42 @@ impl ImplMetadataExt {
                 #[cfg(not(target_os = "wasi"))]
                 mode: u32::from(stat.st_mode),
                 nlink: u64::from(stat.st_nlink),
-                #[cfg(not(target_os = "wasi"))]
+                #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
                 uid: stat.st_uid,
-                #[cfg(not(target_os = "wasi"))]
+                #[cfg(target_os = "qnx")]
+                uid: stat.st_uid.try_into().expect("Invalid QNX UID"),
+                #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
                 gid: stat.st_gid,
+                #[cfg(target_os = "qnx")]
+                gid: stat.st_gid.try_into().expect("Invalid QNX GID"),
                 #[cfg(not(target_os = "wasi"))]
                 rdev: u64::try_from(stat.st_rdev).unwrap(),
                 #[cfg(not(target_os = "wasi"))]
                 size: u64::try_from(stat.st_size).unwrap(),
-                #[cfg(not(target_os = "wasi"))]
+                #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
                 atime: i64::try_from(stat.st_atime).unwrap(),
-                #[cfg(not(target_os = "wasi"))]
+                #[cfg(target_os = "qnx")]
+                atime: stat.st_atim.tv_sec,
+                #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
                 atime_nsec: stat.st_atime_nsec as _,
-                #[cfg(not(target_os = "wasi"))]
+                #[cfg(target_os = "qnx")]
+                atime_nsec: stat.st_atim.tv_nsec,
+                #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
                 mtime: i64::try_from(stat.st_mtime).unwrap(),
-                #[cfg(not(target_os = "wasi"))]
+                #[cfg(target_os = "qnx")]
+                mtime: stat.st_mtim.tv_sec,
+                #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
                 mtime_nsec: stat.st_mtime_nsec as _,
-                #[cfg(not(target_os = "wasi"))]
+                #[cfg(target_os = "qnx")]
+                mtime_nsec: stat.st_mtim.tv_nsec,
+                #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
                 ctime: i64::try_from(stat.st_ctime).unwrap(),
-                #[cfg(not(target_os = "wasi"))]
+                #[cfg(target_os = "qnx")]
+                ctime: stat.st_ctim.tv_sec,
+                #[cfg(not(any(target_os = "wasi", target_os = "qnx")))]
                 ctime_nsec: stat.st_ctime_nsec as _,
+                #[cfg(target_os = "qnx")]
+                ctime_nsec: stat.st_ctim.tv_nsec,
                 #[cfg(not(target_os = "wasi"))]
                 blksize: u64::try_from(stat.st_blksize).unwrap(),
                 #[cfg(not(target_os = "wasi"))]
